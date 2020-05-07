@@ -428,7 +428,6 @@ class DASHBOARD():
             [self.pm_plot], 
             #[self.slider, self.txt_inp],
             [self.slider],
-            [self.heroku_div],
             #[self.sms_inp, self.play_btn, self.pattern_btn, self.match_btn, self.gauge_btn, self.reset_btn]], 
             [self.pattern_btn, self.match_btn, self.play_btn, self.logo_div]],
             sizing_mode=self.sizing_mode)
