@@ -246,7 +246,7 @@ class DASHBOARD():
 
         heroku_div = Div(text="http://tiny.cc/stumpy-demo")
 
-        return keroku_div
+        return heroku_div
 
     def get_slider(self, value=0):
         slider = Slider(start=0.0, end=max(self.df['index'])-self.window, value=value, step=1, title="Subsequence", sizing_mode=self.sizing_mode)
