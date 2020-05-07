@@ -239,7 +239,7 @@ class DASHBOARD():
 
         return logo_div
 
-    def get_heroku_link(self):
+    def get_heroku_div(self):
         """
         STUMPY Heroku App Link
         """
