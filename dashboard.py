@@ -25,6 +25,7 @@ class DASHBOARD():
         self.pm_plot = None
         self.gauge_plot = None
         self.logo_div = None
+        self.heroku_div = None
 
         self.slider = None
         self.play_btn = None
@@ -238,6 +239,15 @@ class DASHBOARD():
 
         return logo_div
 
+    def get_heroku_link(self):
+        """
+        STUMPY Heroku App Link
+        """
+
+        heroku_div = Div(text="http://tiny.cc/stumpy-demo")
+
+        return keroku_div
+
     def get_slider(self, value=0):
         slider = Slider(start=0.0, end=max(self.df['index'])-self.window, value=value, step=1, title="Subsequence", sizing_mode=self.sizing_mode)
         return slider
@@ -395,6 +405,7 @@ class DASHBOARD():
         self.txt_inp = self.get_text_input()
         self.pattern_btn, self.match_btn, self.gauge_btn, self.reset_btn = self.get_buttons()
         self.logo_div = self.get_logo_div()
+        self.heroku_div = self.get_heroku_div()
 
     def set_callbacks(self):
         self.slider.on_change('value', self.update_plots)
@@ -418,7 +429,7 @@ class DASHBOARD():
             #[self.slider, self.txt_inp],
             [self.slider],
             #[self.sms_inp, self.play_btn, self.pattern_btn, self.match_btn, self.gauge_btn, self.reset_btn]], 
-            [self.pattern_btn, self.match_btn, self.play_btn, self.logo_div]],
+            [self.pattern_btn, self.match_btn, self.play_btn, self.logo_div, self.heroku_div]],
             sizing_mode=self.sizing_mode)
 
         return l
