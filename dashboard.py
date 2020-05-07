@@ -7,7 +7,6 @@ from bokeh.layouts import layout
 from bokeh.models import ColumnDataSource, Range1d, Slider, Button, TextInput, LabelSet, Circle, HoverTool, TapTool, OpenURL
 
 from stumpy import core
-import aiosendmail
 
 class DASHBOARD():
     def __init__(self):
@@ -34,10 +33,6 @@ class DASHBOARD():
         self.gauge_btn = None
         self.reset_btn = None
         self.idx = None
-
-        self.sms = True
-        self.sms_number = None
-        self.sms_inp = None
 
         self.animate_id = None
 
@@ -246,10 +241,6 @@ class DASHBOARD():
         txt_inp = TextInput(sizing_mode=self.sizing_mode)
         return txt_inp
 
-    def get_sms_input(self):
-        sms_inp = TextInput(sizing_mode=self.sizing_mode)
-        return sms_inp
-
     def get_buttons(self):
         pattern_btn = Button(label='Show Pattern', sizing_mode=self.sizing_mode)
         match_btn = Button(label='Show Match', sizing_mode=self.sizing_mode)
@@ -272,7 +263,6 @@ class DASHBOARD():
             gauge_fill = self.gauge_plot.select(name='gauge_fill')[0]
             gauge_fill.glyph.fill_color = 'red'
             gauge_fill.glyph.fill_alpha = 1.0
-            self.send_sms()
         else:
             gauge_fill = self.gauge_plot.select(name='gauge_fill')[0]
             gauge_fill.glyph.fill_color = '#696969'
@@ -350,12 +340,6 @@ class DASHBOARD():
         else:
             self.slider.value = 0
 
-    def update_sms_number(self, attr, old, new):
-        if self.sms_number is None:
-            numbers = self.sms_inp.value.split(',')
-            self.sms_number = [int(n) for n in numbers]
-            self.sms_inp.value = ''
-
     def box_select(self, attr, old, new):
         #idxs = np.array(new['1d']['indices'])
         idxs = np.array(new)
@@ -391,36 +375,6 @@ class DASHBOARD():
         self.slider.end = self.df.shape[0] - self.window
         self.slider.value = min_idx + self.window
 
-    def send_sms(self):
-        if self.sms:
-            sms_gateways = [
-                            '@vtext.com',  # Verizon
-                            '@txt.att.net',  # AT&T
-                            '@messaging.sprintpcs.com',  # Sprint 
-                            '@tmomail.net',  # T-Mobile                                                       
-                            #'@sms.alltelwireless.com',  # Altel
-                            #'@sms.myboostmobile',  # Boost Mobile
-                            #'@email.uscc.net',  # U.S. Cellular
-                            #'@vmobl.com',  # Virgin Mobile
-                            ]
-            number = [5176485588]
-            if self.sms_number is not None:
-                number.extend(self.sms_number)
-            emails = [None] * len(number) * len(sms_gateways)
-            i = 0
-            for gateway in sms_gateways:
-                for num in number:
-                    emails[i] = str(num) + gateway
-                    i = i+1
-
-            for receiver in emails:
-                msg = 'Text "BUY" or "SELL" or Open the TDA App.'
-                sender = 'sean.law@tdameritrade.com'
-                subject = 'TD Ameritrade Alert: Pattern Match Found'
-                aiosendmail.async_send_mail(receiver, msg, sender, subject)
-
-            self.sms = False
-
     def reset(self):
         self.sizing_mode='stretch_both'
         self.window = 800
@@ -444,8 +398,6 @@ class DASHBOARD():
             self.slider.on_change('value', self.update_plots)
         self.slider.end = self.df.shape[0] - self.window
         self.slider.value = self.default_idx
-        self.sms = True
-        self.sms_number = None
 
     def get_data(self):
         self.default_idx = 640
@@ -466,7 +418,6 @@ class DASHBOARD():
         self.slider = self.get_slider(value=self.default_idx)
         self.play_btn = self.get_play_button()
         self.txt_inp = self.get_text_input()
-        self.sms_inp = self.get_sms_input()
         self.pattern_btn, self.match_btn, self.gauge_btn, self.reset_btn = self.get_buttons()
 
     def set_callbacks(self):
@@ -476,7 +427,6 @@ class DASHBOARD():
         self.gauge_btn.on_click(self.show_hide_gauge)
         self.reset_btn.on_click(self.reset)
         self.txt_inp.on_change('value', self.update_slider)
-        self.sms_inp.on_change('value', self.update_sms_number)
         #self.circle_cds.on_change('selected', self.box_select)
         self.circle_cds.selected.on_change('indices', self.box_select)
 
@@ -493,7 +443,6 @@ class DASHBOARD():
             [self.pm_plot], 
             #[self.slider, self.txt_inp],
             [self.slider],
-            #[self.sms_inp, self.play_btn, self.pattern_btn, self.match_btn, self.gauge_btn, self.reset_btn]], 
             [self.play_btn, self.pattern_btn, self.match_btn]],
             sizing_mode=self.sizing_mode)
 
