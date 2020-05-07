@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from bokeh.plotting import figure, curdoc
 from bokeh.layouts import layout
-from bokeh.models import ColumnDataSource, Range1d, Slider, Button, TextInput, LabelSet, Circle, HoverTool, TapTool, OpenURL
+from bokeh.models import ColumnDataSource, Range1d, Slider, Button, TextInput, LabelSet, Circle, HoverTool, TapTool, OpenURL, Div
 
 from stumpy import core
 
@@ -24,6 +24,7 @@ class DASHBOARD():
         self.mp_plot = None
         self.pm_plot = None
         self.gauge_plot = None
+        self.logo_div = None
 
         self.slider = None
         self.play_btn = None
@@ -133,7 +134,7 @@ class DASHBOARD():
         """
         Time Series Plot
         """
-        ts_plot = figure(toolbar_location='above', sizing_mode=self.sizing_mode, title='Raw Time Series or Sequence', tools=['box_select', 'reset', 'save', 'tap'])
+        ts_plot = figure(toolbar_location='above', sizing_mode=self.sizing_mode, title='Raw Time Series or Sequence', tools=['reset'])
         q = ts_plot.quad('pattern_left', 'pattern_right', 'pattern_top', 'pattern_bottom', source=self.quad_cds, name='pattern_quad', color='#54b847')
         q.visible = False
         q = ts_plot.quad('match_left', 'match_right', 'match_top', 'match_bottom', source=self.quad_cds, name='match_quad', color='#696969', alpha=0.5)
@@ -228,6 +229,15 @@ class DASHBOARD():
 
         return pm_plot
 
+    def get_logo_div(self):
+        """
+        STUMPY logo
+        """
+
+        logo_div = Div(text="<img src='https://github.com/TDAmeritrade/stumpy/blob/master/docs/images/stumpy_logo_small.png?raw=true'>")
+
+        return logo_div
+
     def get_slider(self, value=0):
         slider = Slider(start=0.0, end=max(self.df['index'])-self.window, value=value, step=1, title="Subsequence", sizing_mode=self.sizing_mode)
         return slider
@@ -242,8 +252,8 @@ class DASHBOARD():
         return txt_inp
 
     def get_buttons(self):
-        pattern_btn = Button(label='Show Pattern', sizing_mode=self.sizing_mode)
-        match_btn = Button(label='Show Match', sizing_mode=self.sizing_mode)
+        pattern_btn = Button(label='Show Reference Window', sizing_mode=self.sizing_mode)
+        match_btn = Button(label='Show Best Match', sizing_mode=self.sizing_mode)
         gauge_btn = Button(label='Show Gauge', sizing_mode=self.sizing_mode)
         reset_btn = Button(label='Reset', sizing_mode=self.sizing_mode) 
         return pattern_btn, match_btn, gauge_btn, reset_btn
@@ -276,12 +286,12 @@ class DASHBOARD():
             pattern_start.visible = False
             pattern_line.visible = False
             pattern_quad.visible = False
-            self.pattern_btn.label = 'Show Pattern'
+            self.pattern_btn.label = 'Show Reference Window'
         else:
             pattern_start.visible = True
             pattern_line.visible = True
             pattern_quad.visible = True
-            self.pattern_btn.label = 'Hide Pattern'
+            self.pattern_btn.label = 'Hide Reference Window'
 
     def show_hide_match(self):
         match_quad = self.ts_plot.select(name='match_quad')[0]
@@ -291,12 +301,12 @@ class DASHBOARD():
             match_dist.visible = False
             match_line.visible = False
             match_quad.visible = False
-            self.match_btn.label = 'Show Match'
+            self.match_btn.label = 'Show Best Match'
         else:
             match_dist.visible = True
             match_line.visible = True
             match_quad.visible = True
-            self.match_btn.label = 'Hide Match'
+            self.match_btn.label = 'Hide Best Match'
 
     def show_hide_gauge(self):
         gauge_fill = self.gauge_plot.select(name='gauge_fill')[0]
@@ -339,41 +349,6 @@ class DASHBOARD():
             self.slider.value = self.slider.value + shift
         else:
             self.slider.value = 0
-
-    def box_select(self, attr, old, new):
-        #idxs = np.array(new['1d']['indices'])
-        idxs = np.array(new)
-        if idxs.shape[0] < 1:  # return if array is empty
-            return
-        min_idx = idxs.min()
-        max_idx = idxs.max()
-        self.window = max_idx - min_idx + 1
-
-        self.df['distance'] = np.nan
-        self.df['idx'] = np.nan
-        Q = self.df['y'].iloc[min_idx:max_idx+1].values
-        T = self.df['y'].values
-        distance_profile = core.mass(Q, T)
-        nrow = distance_profile.shape[0]
-        self.df.loc[:nrow-1, 'distance'] = distance_profile
-        self.df.loc[:nrow-1, 'idx'] = range(nrow)
-        self.ts_cds.data = self.get_ts_dict(self.df)
-        self.mp_plot.x_range.end = self.df.shape[0]-self.window-1
-        self.mp_plot.x_range.bounds = (0, self.df.shape[0]-self.window-1)
-        self.mp_plot.y_range.end = max(self.df['distance'])
-        self.mp_plot.y_range.bounds = (0, max(self.df['distance']))
-        self.mp_plot.title.text = 'Distance Profile'
-        # Update pattern match overlap
-        self.pattern_match_cds.data = self.get_pattern_match_dict(self.df, min_idx, self.slider.value)
-        # Change matrix profile title to distance profile
-        self.quad_cds.data = self.get_custom_quad_dict(self.df, pattern_idx=min_idx, match_idx=max_idx)
-        # Remove callback and add new callback
-        self.pattern_idx = min_idx
-        if self.update_plots in self.slider._callbacks['value']:
-            self.slider.remove_on_change('value', self.update_plots)
-            self.slider.on_change('value', self.custom_update_plots)
-        self.slider.end = self.df.shape[0] - self.window
-        self.slider.value = min_idx + self.window
 
     def reset(self):
         self.sizing_mode='stretch_both'
@@ -419,6 +394,7 @@ class DASHBOARD():
         self.play_btn = self.get_play_button()
         self.txt_inp = self.get_text_input()
         self.pattern_btn, self.match_btn, self.gauge_btn, self.reset_btn = self.get_buttons()
+        self.logo_div = self.get_logo_div()
 
     def set_callbacks(self):
         self.slider.on_change('value', self.update_plots)
@@ -427,8 +403,6 @@ class DASHBOARD():
         self.gauge_btn.on_click(self.show_hide_gauge)
         self.reset_btn.on_click(self.reset)
         self.txt_inp.on_change('value', self.update_slider)
-        #self.circle_cds.on_change('selected', self.box_select)
-        self.circle_cds.selected.on_change('indices', self.box_select)
 
     def get_layout(self):
         self.get_data()
@@ -443,7 +417,8 @@ class DASHBOARD():
             [self.pm_plot], 
             #[self.slider, self.txt_inp],
             [self.slider],
-            [self.play_btn, self.pattern_btn, self.match_btn]],
+            #[self.sms_inp, self.play_btn, self.pattern_btn, self.match_btn, self.gauge_btn, self.reset_btn]], 
+            [self.play_btn, self.pattern_btn, self.match_btn, self.logo_div]],
             sizing_mode=self.sizing_mode)
 
         return l
