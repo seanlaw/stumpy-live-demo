@@ -12,6 +12,7 @@ class DASHBOARD():
     def __init__(self):
         self.sizing_mode='stretch_both'
         self.window = None
+        self.m = None
 
         self.df = None
         self.ts_cds = None
@@ -44,6 +45,7 @@ class DASHBOARD():
         mp_df = pd.read_csv('matrix_profile.csv')
 
         self.window = raw_df.shape[0] - mp_df.shape[0] + 1
+        self.m = raw_df.shape[0] - mp_df.shape[0] + 1
 
         df = pd.merge(raw_df, mp_df, left_index=True, how='left', right_index=True)
 
@@ -345,7 +347,7 @@ class DASHBOARD():
             curdoc().remove_periodic_callback(self.animate_id)
 
     def update_animate(self, shift=50):
-        if self.window < 800:  # Probably using box select
+        if self.window < self.m:  # Probably using box select
             start = self.slider.value
             end = start + shift
             if self.df.loc[start:end, 'distance'].min() <= 15:
@@ -362,7 +364,7 @@ class DASHBOARD():
 
     def reset(self):
         self.sizing_mode='stretch_both'
-        self.window = 800
+        self.window = self.m
 
         self.default_idx = 640
         self.df = self.get_df_from_file()
