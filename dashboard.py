@@ -264,8 +264,8 @@ class DASHBOARD():
         return txt_inp
 
     def get_buttons(self):
-        pattern_btn = Button(label='Show Reference Window', sizing_mode=self.sizing_mode)
-        match_btn = Button(label='Show Best Match', sizing_mode=self.sizing_mode)
+        pattern_btn = Button(label='Show Motif', sizing_mode=self.sizing_mode)
+        match_btn = Button(label='Show Nearest Neighbor', sizing_mode=self.sizing_mode)
         gauge_btn = Button(label='Show Gauge', sizing_mode=self.sizing_mode)
         reset_btn = Button(label='Reset', sizing_mode=self.sizing_mode) 
         return pattern_btn, match_btn, gauge_btn, reset_btn
@@ -298,12 +298,12 @@ class DASHBOARD():
             pattern_start.visible = False
             pattern_line.visible = False
             pattern_quad.visible = False
-            self.pattern_btn.label = 'Show Reference Window'
+            self.pattern_btn.label = 'Show Motif'
         else:
             pattern_start.visible = True
             pattern_line.visible = True
             pattern_quad.visible = True
-            self.pattern_btn.label = 'Hide Reference Window'
+            self.pattern_btn.label = 'Hide Motif'
 
     def show_hide_match(self):
         match_quad = self.ts_plot.select(name='match_quad')[0]
@@ -313,12 +313,12 @@ class DASHBOARD():
             match_dist.visible = False
             match_line.visible = False
             match_quad.visible = False
-            self.match_btn.label = 'Show Best Match'
+            self.match_btn.label = 'Show Nearest Neighbor'
         else:
             match_dist.visible = True
             match_line.visible = True
             match_quad.visible = True
-            self.match_btn.label = 'Hide Best Match'
+            self.match_btn.label = 'Hide Nearest Neighbor'
 
     def show_hide_gauge(self):
         gauge_fill = self.gauge_plot.select(name='gauge_fill')[0]
