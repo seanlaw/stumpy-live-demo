@@ -237,7 +237,7 @@ class DASHBOARD():
         STUMPY logo
         """
 
-        logo_div = Div(text="<a href='https://stumpy.readthedocs.io/en/latest/'><img src='https://github.com/TDAmeritrade/stumpy/blob/master/docs/images/stumpy_logo_small.png?raw=true'></a>")
+        logo_div = Div(text="<a href='https://stumpy.readthedocs.io/en/latest/'><img src='https://raw.githubusercontent.com/TDAmeritrade/stumpy/main/docs/images/stumpy_logo_small.png'></a>")
 
         return logo_div
 
