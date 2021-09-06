@@ -18,13 +18,12 @@ class DASHBOARD():
         self.ts_cds = None
         self.quad_cds = None
         self.pattern_match_cds = None
-        self.guage_cds = None
+        self.dist_cds = None
         self.circle_cds = None
 
         self.ts_plot = None
         self.mp_plot = None
         self.pm_plot = None
-        self.gauge_plot = None
         self.logo_div = None
         self.heroku_div = None
 
@@ -33,9 +32,9 @@ class DASHBOARD():
         self.txt_inp = None
         self.pattern_btn = None
         self.match_btn = None
-        self.gauge_btn = None
         self.reset_btn = None
         self.idx = None
+        self.min_distance_idx = None
 
         self.animate_id = None
 
@@ -46,6 +45,7 @@ class DASHBOARD():
 
         self.window = raw_df.shape[0] - mp_df.shape[0] + 1
         self.m = raw_df.shape[0] - mp_df.shape[0] + 1
+        self.min_distance_idx = mp_df['distance'].argmin()
 
         df = pd.merge(raw_df, mp_df, left_index=True, how='left', right_index=True)
 
@@ -114,25 +114,6 @@ class DASHBOARD():
 
         return pattern_match_dict
 
-    def get_gauge_dict(self, df, pattern_idx=0):
-        dist = df['distance']
-        max_dist = dist.max()
-        min_dist = dist.min()
-        x_offset = self.df.shape[0] - self.window/2
-        y_offset = max_dist/2
-        distance = dist.loc[pattern_idx]
-        end_angle = 225 - ((225+45)*distance/max_dist)
-        text = distance.round(1).astype(str)
-        gauge_dict = dict(
-            x=[0+x_offset], 
-            y=[0+y_offset],
-            start_angle=[225],
-            end_angle=[end_angle.round(0).astype(str)],
-            text=[text]
-        ) 
-
-        return gauge_dict
-
     def get_ts_plot(self, color='black'):
         """
         Time Series Plot
@@ -161,6 +142,22 @@ class DASHBOARD():
 
         return ts_plot
 
+    def get_dist_dict(self, df, pattern_idx=0):
+        dist = df['distance']
+        max_dist = dist.max()
+        min_dist = dist.min()
+        x_offset = self.df.shape[0] - self.window/2
+        y_offset = max_dist/2
+        distance = dist.loc[pattern_idx]
+        text = distance.round(1).astype(str)
+        gauge_dict = dict(
+            x=[0+x_offset],
+            y=[0+y_offset],
+            text=[text]
+        )
+
+        return gauge_dict
+
     def get_mp_plot(self):
         """
         Matrix Profile Plot
@@ -175,50 +172,11 @@ class DASHBOARD():
         mp_plot.x_range = Range1d(0, self.df.shape[0]+1, bounds=(0, self.df.shape[0]+1))
         mp_plot.y_range = Range1d(0, max(self.df['distance']), bounds=(0, max(self.df['distance'])))
 
-        label = LabelSet(x='x', y='y', text='text', source=self.gauge_cds, text_align='center', name='gauge_label', text_color='black', text_font_size='30pt')
+        
+        label = LabelSet(x='x', y='y', text='text', source=self.dist_cds, text_align='center', name='gauge_label', text_color='black', text_font_size='30pt')
         mp_plot.add_layout(label)
 
         return mp_plot
-
-    def get_gauge_plot(self):
-        gauge_plot = figure(toolbar_location=None, title='Distance to Closest Pattern Match')
-        gauge_plot.toolbar.active_drag = None
-        gauge_plot.axis.visible = False
-        gauge_plot.grid.visible = False
-        aw = gauge_plot.annular_wedge(
-            x=[0], 
-            y=[0],
-            start_angle=225, 
-            end_angle=-45, 
-            direction='clock',
-            inner_radius=0.1, 
-            outer_radius=0.15,
-            start_angle_units='deg',
-            end_angle_units='deg',
-            fill_color=None,
-            line_color='#54b847',
-            name='gauge_outline',
-        )
-        aw.visible = False
-        aw = gauge_plot.annular_wedge(
-            x='x', 
-            y='y',
-            start_angle='start_angle', 
-            end_angle='end_angle', 
-            source=self.gauge_cds,
-            direction='clock',
-            inner_radius=0.1, 
-            outer_radius=0.15,
-            start_angle_units='deg',
-            end_angle_units='deg',
-            color='#696969',
-            alpha=0.5,
-            name='gauge_fill',
-        )
-        aw.visible = False
-        label = LabelSet(x='x', y='y', text='text', source=self.gauge_cds, text_align='center', y_offset=-10, name='gauge_label', text_color='white')
-        gauge_plot.add_layout(label)
-        return gauge_plot
 
     def get_pm_plot(self):
         """
@@ -266,29 +224,19 @@ class DASHBOARD():
     def get_buttons(self):
         pattern_btn = Button(label='Show Motif', sizing_mode=self.sizing_mode)
         match_btn = Button(label='Show Nearest Neighbor', sizing_mode=self.sizing_mode)
-        gauge_btn = Button(label='Show Gauge', sizing_mode=self.sizing_mode)
         reset_btn = Button(label='Reset', sizing_mode=self.sizing_mode) 
-        return pattern_btn, match_btn, gauge_btn, reset_btn
+        return pattern_btn, match_btn, reset_btn
 
     def update_plots(self, attr, new, old):
         self.quad_cds.data = self.get_quad_dict(self.df, self.slider.value)
         self.pattern_match_cds.data = self.get_pattern_match_dict(self.df, self.slider.value)
-        self.gauge_cds.data = self.get_gauge_dict(self.df, self.slider.value)
+        self.dist_cds.data = self.get_dist_dict(self.df, self.slider.value)
 
     def custom_update_plots(self, attr, new, old):
         self.quad_cds.data = self.get_custom_quad_dict(self.df, self.pattern_idx, self.slider.value)
         self.pattern_match_cds.data = self.get_pattern_match_dict(self.df, self.pattern_idx, self.slider.value)
-        self.gauge_cds.data = self.get_gauge_dict(self.df, self.slider.value)
-
+        self.dist_cds.data = self.get_dist_dict(self.df, self.slider.value)
         dist = self.df['distance'].loc[self.slider.value]
-        if dist < 15.0:
-            gauge_fill = self.gauge_plot.select(name='gauge_fill')[0]
-            gauge_fill.glyph.fill_color = 'red'
-            gauge_fill.glyph.fill_alpha = 1.0
-        else:
-            gauge_fill = self.gauge_plot.select(name='gauge_fill')[0]
-            gauge_fill.glyph.fill_color = '#696969'
-            gauge_fill.glyph.fill_alpha = 0.5
 
     def show_hide_pattern(self):
         pattern_quad = self.ts_plot.select(name='pattern_quad')[0]
@@ -319,21 +267,6 @@ class DASHBOARD():
             match_line.visible = True
             match_quad.visible = True
             self.match_btn.label = 'Hide Nearest Neighbor'
-
-    def show_hide_gauge(self):
-        gauge_fill = self.gauge_plot.select(name='gauge_fill')[0]
-        gauge_outline = self.gauge_plot.select(name='gauge_outline')[0]
-        gauge_label = self.gauge_plot.select(name='gauge_label')[0]
-        if gauge_fill.visible:
-            gauge_fill.visible = False
-            gauge_outline.visible = False
-            gauge_label.text_color = 'white'
-            self.gauge_btn.label = 'Show Gauge'
-        else:        
-            gauge_fill.visible = True
-            gauge_outline.visible = True
-            gauge_label.text_color = 'black'
-            self.gauge_btn.label = 'Hide Gauge'
 
     def update_slider(self, attr, old, new):
         self.slider.value = int(self.txt_inp.value)
@@ -366,7 +299,7 @@ class DASHBOARD():
         self.sizing_mode='stretch_both'
         self.window = self.m
 
-        self.default_idx = 640
+        self.default_idx = self.min_distance_idx
         self.df = self.get_df_from_file()
         self.ts_cds.data = self.get_ts_dict(self.df)
         self.mp_plot.y_range.end = max(self.df['distance'])
@@ -374,10 +307,7 @@ class DASHBOARD():
         self.mp_plot.y_range.bounds = (0, max(self.df['distance']))
         self.quad_cds.data = self.get_quad_dict(self.df, pattern_idx=self.default_idx)
         self.pattern_match_cds.data = self.get_pattern_match_dict(self.df, pattern_idx=self.default_idx)
-        self.gauge_cds.data = self.get_gauge_dict(self.df, pattern_idx=self.default_idx)
-        gauge_fill = self.gauge_plot.select(name='gauge_fill')[0]
-        gauge_fill.glyph.fill_color = '#696969'
-        gauge_fill.glyph.fill_alpha = 0.5
+        self.dist_cds.data = self.get_dist_dict(self.df, pattern_idx=self.default_idx)
         self.circle_cds.data = self.get_circle_dict(self.df)
         # Remove callback and add old callback
         if self.custom_update_plots in self.slider._callbacks['value']:
@@ -387,25 +317,24 @@ class DASHBOARD():
         self.slider.value = self.default_idx
 
     def get_data(self):
-        self.default_idx = 640
         self.df = self.get_df_from_file()
+        self.default_idx = self.min_distance_idx
         self.ts_cds = ColumnDataSource(self.get_ts_dict(self.df))
         self.quad_cds = ColumnDataSource(self.get_quad_dict(self.df, pattern_idx=self.default_idx))
         self.pattern_match_cds = ColumnDataSource(self.get_pattern_match_dict(self.df, pattern_idx=self.default_idx))
-        self.gauge_cds = ColumnDataSource(self.get_gauge_dict(self.df, pattern_idx=self.default_idx))
+        self.dist_cds = ColumnDataSource(self.get_dist_dict(self.df, pattern_idx=self.default_idx))
         self.circle_cds = ColumnDataSource(self.get_circle_dict(self.df))
 
     def get_plots(self, ts_plot_color='black'):
         self.ts_plot = self.get_ts_plot(color=ts_plot_color)
         self.mp_plot = self.get_mp_plot()
         self.pm_plot = self.get_pm_plot()
-        self.gauge_plot = self.get_gauge_plot()
 
     def get_widgets(self):
         self.slider = self.get_slider(value=self.default_idx)
         self.play_btn = self.get_play_button()
         self.txt_inp = self.get_text_input()
-        self.pattern_btn, self.match_btn, self.gauge_btn, self.reset_btn = self.get_buttons()
+        self.pattern_btn, self.match_btn, self.reset_btn = self.get_buttons()
         self.logo_div = self.get_logo_div()
         self.heroku_div = self.get_heroku_div()
 
@@ -413,7 +342,6 @@ class DASHBOARD():
         self.slider.on_change('value', self.update_plots)
         self.pattern_btn.on_click(self.show_hide_pattern)
         self.match_btn.on_click(self.show_hide_match)
-        self.gauge_btn.on_click(self.show_hide_gauge)
         self.reset_btn.on_click(self.reset)
         self.txt_inp.on_change('value', self.update_slider)
 
@@ -425,12 +353,9 @@ class DASHBOARD():
 
         l = layout([
             [self.ts_plot], 
-            #[self.gauge_plot, self.mp_plot], 
             [self.mp_plot],
             [self.pm_plot], 
-            #[self.slider, self.txt_inp],
             [self.slider],
-            #[self.sms_inp, self.play_btn, self.pattern_btn, self.match_btn, self.gauge_btn, self.reset_btn]], 
             [self.pattern_btn, self.match_btn, self.play_btn, self.logo_div]],
             sizing_mode=self.sizing_mode)
 
