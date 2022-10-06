@@ -4,9 +4,8 @@ import pandas as pd
 import numpy as np
 from bokeh.plotting import figure, curdoc
 from bokeh.layouts import layout
-from bokeh.models import ColumnDataSource, Range1d, Slider, Button, TextInput, LabelSet, Circle, HoverTool, TapTool, OpenURL, Div
+from bokeh.models import ColumnDataSource, Range1d, Slider, Button, TextInput, LabelSet, Circle, Div
 
-from stumpy import core
 
 class DASHBOARD():
     def __init__(self):
@@ -130,15 +129,6 @@ class DASHBOARD():
         c = ts_plot.circle(x='index', y='y', source=self.circle_cds, size=0, line_color='white')
         c.selection_glyph = Circle(line_color='white')
         c.nonselection_glyph = Circle(line_color='white')
-
-        # Modify taptool to open URL link when point is clicked
-        #url = '@url'
-        #taptool = ts_plot.select(type=TapTool)
-        #taptool.callback = OpenURL(url=url)
-
-        # Add hovertool for line renderer
-        #ts_plot.add_tools(HoverTool(renderers=[l], tooltips=[('Title', '@title'), ('URL', '@url'), ('Source','@domain'), ('Daily Rank', '@rank'), ('Date', '@date')]))
-
 
         return ts_plot
 
