@@ -106,7 +106,7 @@ class DASHBOARD():
         if match_idx is None:
             match_idx = df['idx'].loc[pattern_idx].astype(int)
         pattern_match_dict = dict(
-            index=range(self.window),
+            index=list(range(self.window)),
             pattern=df['y'].loc[pattern_idx:pattern_idx+self.window-1],
             match=df['y'].loc[match_idx:match_idx+self.window-1]
         )
