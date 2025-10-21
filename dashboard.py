@@ -126,9 +126,9 @@ class DASHBOARD():
         ts_plot.x_range = Range1d(0, max(self.df['index']), bounds=(0, max(self.df['x'])))
         ts_plot.y_range = Range1d(0, max(self.df['y']), bounds=(0, max(self.df['y'])))
 
-        c = ts_plot.circle(x='index', y='y', source=self.circle_cds, size=0, line_color='white')
-        c.selection_glyph = Circle(line_color='white')
-        c.nonselection_glyph = Circle(line_color='white')
+        c = ts_plot.circle(x='index', y='y', source=self.circle_cds, radius=0, line_color='white')
+        c.selection_glyph = Circle(radius=0, line_color='white')
+        c.nonselection_glyph = Circle(radius=0, line_color='white')
 
         return ts_plot
 
